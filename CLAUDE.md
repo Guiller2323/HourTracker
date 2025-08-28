@@ -6,7 +6,7 @@ A modern employee time-tracking desktop application built with Next.js, designed
 ## Technology Stack
 - **Frontend**: Next.js 15, React 19, TypeScript
 - **Styling**: Tailwind CSS
-- **Database**: better-sqlite3 (SQLite)
+- **Database**: PostgreSQL (Neon) for production; SQLite used only for optional local migration/desktop
 - **Notifications**: react-toastify
 - **Desktop Packaging**: Tauri (optional)
 - **Build Tool**: Turbopack for development
@@ -31,16 +31,21 @@ Hours-tracker/
 │   │   ├── TimecardView.tsx          # Traditional timecard display
 │   │   └── EmployeeManager.tsx       # Employee management with delete functionality
 │   └── lib/
-│       └── database.ts               # SQLite database with timecard business logic
+│       ├── db.ts                     # Postgres (Neon) database with timecard business logic (async)
+│       └── database.ts               # Compatibility proxy to db.ts (kept to avoid breaking imports)
 ├── src-tauri/                        # Tauri desktop app configuration
 │   ├── Cargo.toml                    # Rust dependencies
 │   └── tauri.conf.json               # Tauri app configuration
 ├── .next/                            # Next.js build output (auto-generated)
+├── .env.example                      # Env template (POSTGRES_URL)
 ├── package.json                      # Node.js dependencies and scripts
 ├── tailwind.config.ts                # Tailwind CSS configuration
 ├── tsconfig.json                     # TypeScript configuration
 ├── next.config.js                    # Next.js configuration
-├── timetracker.db                    # SQLite database file (created at runtime)
+├── timetracker.db                    # Legacy SQLite file (optional: source for one-time migration)
+├── scripts/
+│   └── migrate-sqlite-to-postgres.js # One-time data migration script (SQLite → Postgres)
+├── DEPLOYMENT.md                     # Vercel + Neon deployment guide
 ├── README.md                         # Comprehensive project documentation
 ├── SETUP_COMPLETE.md                 # Setup completion guide
 └── CLAUDE.md                        # This context file
@@ -55,46 +60,52 @@ Hours-tracker/
 - **Time Calculations**: Automatic daily and weekly hour totals
 - **OFF Day Marking**: Mark days as OFF when employees don't work
 - **Modern UI**: Card-based interface with gradient backgrounds and smooth animations
-- **SQLite Database**: Persistent storage with punch_records and employees tables
+- **PostgreSQL Database**: Neon-backed storage with punch_records and employees tables
 - **Responsive Design**: Adapts to different screen sizes
 - **Toast Notifications**: Success/error feedback for all user actions
 - **Print-Ready Format**: Optimized for traditional timecard printing
 
-## Database Schema - UPDATED
+## Database Schema (PostgreSQL) - UPDATED
 ```sql
--- Employees table
-CREATE TABLE employees (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL UNIQUE,
-  active INTEGER NOT NULL DEFAULT 1,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+-- Employees
+CREATE TABLE IF NOT EXISTS employees (
+   id SERIAL PRIMARY KEY,
+   name TEXT NOT NULL UNIQUE,
+   active BOOLEAN DEFAULT TRUE,
+   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Punch records for timecard tracking
-CREATE TABLE punch_records (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  employee_name TEXT NOT NULL,
-  date TEXT NOT NULL,
-  day_of_week TEXT NOT NULL,
-  punch_in_time TEXT,
-  punch_out_time TEXT,
-  lunch_start_time TEXT,
-  lunch_end_time TEXT,
-  total_hours REAL DEFAULT 0,
-  is_off_day INTEGER DEFAULT 0,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+-- Punch records
+CREATE TABLE IF NOT EXISTS punch_records (
+   id SERIAL PRIMARY KEY,
+   employee_name TEXT NOT NULL,
+   date DATE NOT NULL,
+   day_of_week TEXT NOT NULL,
+   punch_in_time TEXT,
+   punch_out_time TEXT,
+   lunch_start_time TEXT,
+   lunch_end_time TEXT,
+   total_hours REAL DEFAULT 0,
+   is_off_day BOOLEAN DEFAULT FALSE,
+   created_at TIMESTAMPTZ DEFAULT now(),
+   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Legacy time entries (maintained for compatibility)
-CREATE TABLE time_entries (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  employee_name TEXT NOT NULL,
-  date TEXT NOT NULL,
-  hours REAL NOT NULL,
-  lunch_taken INTEGER NOT NULL DEFAULT 0,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+-- Legacy time entries (kept for compatibility)
+CREATE TABLE IF NOT EXISTS time_entries (
+   id SERIAL PRIMARY KEY,
+   employee_name TEXT NOT NULL,
+   date DATE NOT NULL,
+   hours REAL NOT NULL,
+   lunch_taken BOOLEAN NOT NULL DEFAULT FALSE,
+   created_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- Helpful indexes
+CREATE INDEX IF NOT EXISTS idx_punch_records_employee_date ON punch_records(employee_name, date);
+-- Uniqueness for upsert behavior
+-- (created as an index to avoid breaking existing data)
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_punch_employee_date ON punch_records(employee_name, date);
 ```
 
 ## API Endpoints - UPDATED
@@ -143,6 +154,8 @@ npm run dev:4001      # Start dev server on port 4001
 npm run build         # Build for production
 npm run start         # Start production server
 npm run lint          # Run ESLint
+# Data migration (optional, one-time)
+npm run migrate:sqlite  # Requires POSTGRES_URL in env, migrates timetracker.db → Postgres
 # Desktop (optional)
 npx tauri dev         # Run desktop app in development
 npx tauri build       # Build desktop application
@@ -150,7 +163,7 @@ npx tauri build       # Build desktop application
 
 Notes:
 - This app uses server API routes; do not use static export for runtime use.
-- After npm install, native module is auto-rebuilt (see postinstall).
+- No native modules required at runtime for DB; Postgres is used in production. SQLite is only used by the optional migration script.
 
 ## Business Logic - UPDATED
 - **Punch Clock System**: Employees punch IN/OUT with automatic time tracking
@@ -175,20 +188,35 @@ Notes:
 - ✅ Fully functional traditional timecard application
 - ✅ Modern punch clock with real-time IN/OUT tracking
 - ✅ Traditional paper-style timecard format implemented
-- ✅ SQLite database with punch_records and employees tables
+- ✅ PostgreSQL (Neon) database with punch_records and employees tables
 - ✅ Employee management with add/delete functionality
 - ✅ CSV export and print-ready formatting
 - ✅ Weekly timecard view with traditional green styling
 - ✅ Manual entry tab removed per customer request
-- ✅ Production build and export configured
+- ✅ Production build configured; Vercel + Neon ready
 - ✅ Ready for desktop packaging with Tauri
 
 ### Recent Updates
-#### August 28, 2025
-1. Native module fix for better-sqlite3
-   - Resolved ERR_DLOPEN_FAILED: "Module did not self-register" on API routes.
-   - Added postinstall: automatically rebuilds better-sqlite3 after npm install.
-   - Added convenience script `dev:4001` to avoid port conflicts.
+#### August 28, 2025 — Cloud migration (Vercel + Neon)
+1. Database migration to PostgreSQL (Neon)
+   - Introduced `src/lib/db.ts` with async Postgres implementation using `pg`.
+   - Kept `src/lib/database.ts` as a thin proxy to avoid breaking imports.
+   - Schema created lazily at first use; added indexes and a unique index on `(employee_name, date)`.
+
+2. API routes updated to async Postgres
+   - Updated `employees`, `punch`, `timecard`, `offday`, and `export/csv` routes to use `lib/db`.
+
+3. One-time data migration
+   - Added `scripts/migrate-sqlite-to-postgres.js` to copy data from `timetracker.db` → Postgres.
+   - Command: `POSTGRES_URL="postgres://..." npm run migrate:sqlite`.
+
+4. Environment and deployment
+   - Added `.env.example` with `POSTGRES_URL`.
+   - Added `DEPLOYMENT.md` with Vercel + Neon steps.
+   - Build does not require DB connectivity at build-time (lazy init), suitable for Vercel.
+
+5. Repository
+   - Pushed to GitHub: `https://github.com/Guiller2323/HourTracker.git` (branch: `main`).
 
 2. Docs cleanup
    - Corrected DB schema (no employee_id FK; using employee_name).
@@ -281,9 +309,15 @@ This section captures the exact steps and artifacts used to run Hours Tracker on
 - Data file: `data/timetracker.db` (back up this file)
 
 ### Notes
-- Server is intended for a single-node deployment with local SQLite and persistent disk.
-- Do not deploy this to serverless platforms without migrating SQLite (e.g., libsql/Turso).
+- This section documents legacy on-box SQLite deployment. For serverless/cloud, use the Vercel + Neon flow below.
 - When enabling login later, add `SESSION_SECRET` to `.env.production` and restart.
+
+## Deployment (Vercel + Neon) — NEW
+Summary (see `DEPLOYMENT.md` for full steps):
+1) Create a Neon project and copy the pooled connection string (ends with `-pooler`, requires SSL).
+2) In Vercel → Project → Settings → Environment Variables, add `POSTGRES_URL`.
+3) Deploy via Git connection or CLI. No DB access is needed at build-time (schema initializes on first request).
+4) Optional: run the SQLite → Postgres migration script locally before switching over.
 
 ## Potential Enhancements
 

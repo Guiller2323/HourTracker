@@ -205,37 +205,22 @@ function calculateHours(startTime: string, endTime: string, lunchStart?: string,
 export async function addEmployee(name: string) {
   await ensureInit();
   const existing = await sql.query('SELECT id, active FROM employees WHERE name = $1', [name]);
-  const row = existing.rows[0];
-  if (row) {
-    const isActive = USE_SQLITE ? !!row.active : !!row.active;
-    if (isActive) throw new Error(`Employee "${name}" already exists`);
-    if (USE_SQLITE) {
-      await sql.query('UPDATE employees SET active = 1 WHERE id = $1', [row.id]);
-    } else {
-      await sql.query('UPDATE employees SET active = TRUE WHERE id = $1', [row.id]);
-    }
+  if (existing.rows[0]) {
+    if (existing.rows[0].active) throw new Error(`Employee "${name}" already exists`);
+    await sql.query('UPDATE employees SET active = TRUE WHERE id = $1', [existing.rows[0].id]);
     await sql.query('DELETE FROM punch_records WHERE employee_name = $1', [name]);
     await sql.query('DELETE FROM time_entries WHERE employee_name = $1', [name]);
-    return { lastInsertRowid: row.id } as { lastInsertRowid: number };
+    return { lastInsertRowid: existing.rows[0].id } as { lastInsertRowid: number };
   }
-  if (USE_SQLITE) {
-    const res = await sql.query('INSERT INTO employees (name, active) VALUES ($1, 1) RETURNING id', [name]);
-    return { lastInsertRowid: res.rows[0].id } as { lastInsertRowid: number };
-  } else {
-    const inserted = await sql.query('INSERT INTO employees (name, active) VALUES ($1, TRUE) RETURNING id', [name]);
-    return { lastInsertRowid: inserted.rows[0].id } as { lastInsertRowid: number };
-  }
+  const inserted = await sql.query('INSERT INTO employees (name, active) VALUES ($1, TRUE) RETURNING id', [name]);
+  return { lastInsertRowid: inserted.rows[0].id } as { lastInsertRowid: number };
 }
 
 export async function deleteEmployee(id: number) {
   await ensureInit();
   const res = await sql.query('SELECT name FROM employees WHERE id = $1', [id]);
   const name = res.rows[0]?.name as string | undefined;
-  if (USE_SQLITE) {
-    await sql.query('UPDATE employees SET active = 0 WHERE id = $1', [id]);
-  } else {
-    await sql.query('UPDATE employees SET active = FALSE WHERE id = $1', [id]);
-  }
+  await sql.query('UPDATE employees SET active = FALSE WHERE id = $1', [id]);
   if (name) {
     await sql.query('DELETE FROM punch_records WHERE employee_name = $1', [name]);
     await sql.query('DELETE FROM time_entries WHERE employee_name = $1', [name]);
@@ -265,7 +250,7 @@ export async function recordPunch(employeeName: string, punchType: 'IN' | 'OUT' 
     if (punchType === 'OUT') { sets.push('punch_out_time = $1'); params.push(time); }
     if (punchType === 'LUNCH') { sets.push('lunch_start_time = $1'); params.push(time); }
     if (punchType === 'LUNCH_END') { sets.push('lunch_end_time = $1'); params.push(time); }
-    sets.push(USE_SQLITE ? 'updated_at = CURRENT_TIMESTAMP' : 'updated_at = now()');
+    sets.push('updated_at = now()');
     const setClause = sets.map((s, idx) => s.replace('$1', `$${idx + 1}`)).join(', ');
     params.push(employeeName, date);
     const whereEmployeePos = params.length - 1;
@@ -289,7 +274,7 @@ export async function recordPunch(employeeName: string, punchType: 'IN' | 'OUT' 
       punchType === 'LUNCH' ? time : null,
       punchType === 'LUNCH_END' ? time : null,
       0,
-      USE_SQLITE ? 0 : false,
+      false,
     ]
   );
   if (punchType === 'OUT') await updateTotalHours(employeeName, date);
@@ -311,21 +296,12 @@ async function updateTotalHours(employeeName: string, date: string) {
 export async function markOffDay(employeeName: string, date: string) {
   await ensureInit();
   const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' });
-  if (USE_SQLITE) {
-    await sql.query(
-      `INSERT INTO punch_records (employee_name, date, day_of_week, is_off_day, total_hours)
-       VALUES ($1,$2,$3, 1, 0)
-       ON CONFLICT (employee_name, date) DO UPDATE SET is_off_day = excluded.is_off_day, total_hours = 0, day_of_week = excluded.day_of_week, updated_at = CURRENT_TIMESTAMP`,
-      [employeeName, date, dayOfWeek]
-    );
-  } else {
-    await sql.query(
-      `INSERT INTO punch_records (employee_name, date, day_of_week, is_off_day, total_hours)
-       VALUES ($1,$2,$3, TRUE, 0)
-       ON CONFLICT (employee_name, date) DO UPDATE SET is_off_day = EXCLUDED.is_off_day, total_hours = 0, day_of_week = EXCLUDED.day_of_week, updated_at = now()`,
-      [employeeName, date, dayOfWeek]
-    );
-  }
+  await sql.query(
+    `INSERT INTO punch_records (employee_name, date, day_of_week, is_off_day, total_hours)
+     VALUES ($1,$2,$3, TRUE, 0)
+     ON CONFLICT (employee_name, date) DO UPDATE SET is_off_day = EXCLUDED.is_off_day, total_hours = 0, day_of_week = EXCLUDED.day_of_week, updated_at = now()`,
+    [employeeName, date, dayOfWeek]
+  );
   const { rows } = await sql.query('SELECT id FROM punch_records WHERE employee_name = $1 AND date = $2', [employeeName, date]);
   return { lastInsertRowid: rows[0]?.id } as any;
 }
@@ -350,8 +326,8 @@ export async function getWeeklyTimecard(employeeName: string, weekEndingDate: st
     punch_out_time: row.punch_out_time,
     lunch_start_time: row.lunch_start_time,
     lunch_end_time: row.lunch_end_time,
-    total_hours: typeof row.total_hours === 'number' ? row.total_hours : Number(row.total_hours || 0),
-    is_off_day: USE_SQLITE ? !!row.is_off_day : !!row.is_off_day,
+    total_hours: row.total_hours,
+    is_off_day: !!row.is_off_day,
   }));
 }
 
@@ -373,7 +349,7 @@ export async function saveTimeEntry(employeeName: string, date: string, hours: n
   await ensureInit();
   const { rows } = await sql.query(
     'INSERT INTO time_entries (employee_name, date, hours, lunch_taken) VALUES ($1,$2,$3,$4) RETURNING id',
-    [employeeName, date, hours, USE_SQLITE ? (lunchTaken ? 1 : 0) : lunchTaken]
+    [employeeName, date, hours, lunchTaken]
   );
   return { lastInsertRowid: rows[0].id } as any;
 }
@@ -395,8 +371,8 @@ export async function getWeeklyReport(): Promise<TimeEntry[]> {
     id: row.id,
     employee_name: row.employee_name,
     date: row.date,
-    hours: typeof row.hours === 'number' ? row.hours : Number(row.hours || 0),
-    lunch_taken: USE_SQLITE ? !!row.lunch_taken : !!row.lunch_taken,
+    hours: row.hours,
+    lunch_taken: !!row.lunch_taken,
   }));
 }
 

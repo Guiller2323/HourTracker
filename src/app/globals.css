@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Print styles for timecard */
+@media print {
+  body {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  
+  .print\\:hidden {
+    display: none !important;
+  }
+  
+  .print\\:block {
+    display: block !important;
+  }
+  
+  .print\\:text-black {
+    color: black !important;
+  }
+  
+  .print\\:border-2 {
+    border-width: 2px !important;
+  }
+  
+  .print\\:border-green-600 {
+    border-color: #059669 !important;
+  }
+  
+  .print\\:mb-4 {
+    margin-bottom: 1rem !important;
+  }
+  
+  /* Force page breaks and sizing */
+  @page {
+    size: letter;
+    margin: 0.5in;
+  }
+  
+  /* Ensure timecard table stays together */
+  table {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  
+  /* Hide background gradients for printing */
+  .bg-gradient-to-br,
+  .bg-gradient-to-r {
+    background: white !important;
+  }
+}

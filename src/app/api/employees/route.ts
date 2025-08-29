@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { addEmployee, getEmployees, deleteEmployee } from '@/lib/db';
+import { addEmployee, getEmployees, deleteEmployee } from '@/lib/database';
 
 export async function GET() {
   try {

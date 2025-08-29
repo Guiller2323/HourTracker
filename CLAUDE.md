@@ -3,13 +3,15 @@
 ## Project Overview
 A modern employee time-tracking desktop application built with Next.js, designed for easy desktop deployment with Tauri. The application provides a clean, manager-focused interface for tracking employee hours and generating weekly reports.
 
-## Technology Stack
+## Technology Stack - UPDATED
 - **Frontend**: Next.js 15, React 19, TypeScript
 - **Styling**: Tailwind CSS
-- **Database**: PostgreSQL (Neon) for production; SQLite used only for optional local migration/desktop
+- **Database**: Supabase (PostgreSQL) for production; SQLite for local/desktop
+- **Database Client**: @supabase/supabase-js for cloud operations
 - **Notifications**: react-toastify
 - **Desktop Packaging**: Tauri (optional)
 - **Build Tool**: Turbopack for development
+- **Deployment**: Vercel for web deployment
 
 ## Project Structure - UPDATED
 ```
@@ -373,3 +375,210 @@ From the customer images, all requirements have been met:
 - ✅ CSV export for payroll integration
 
 This application successfully meets the requirements for a modern, professional time-tracking solution that surpasses traditional desktop application aesthetics while maintaining simplicity for manager use.
+
+---
+
+# 🔄 SUPABASE MIGRATION & VERCEL DEPLOYMENT - COMPLETED
+
+## Migration Overview
+Successfully migrated the HourTracker application from local SQLite/PostgreSQL setup to **Supabase cloud database** with **Vercel deployment**. This enables the application to run as a web application accessible from anywhere.
+
+## Migration Changes Made
+
+### 1. Database Integration
+- **Added Supabase Client**: `src/lib/supabase.ts`
+  - Configured with project URL and API keys
+  - Separate client for admin operations
+  - Proper error handling for missing environment variables
+
+- **Updated Database Layer**: `src/lib/db-supabase.ts`
+  - Complete rewrite of database functions for Supabase
+  - Async operations with proper error handling
+  - Row Level Security (RLS) compatible queries
+  - Upsert operations for punch records
+
+- **Database Proxy**: Updated `src/lib/database.ts`
+  - Seamless transition from old to new database layer
+  - Maintains backward compatibility with existing imports
+  - Clean abstraction layer
+
+### 2. API Route Improvements
+- **Enhanced Error Handling**: `src/app/api/employees/route.ts`
+  - Better error messages for Supabase-specific issues
+  - Proper handling of unique constraint violations
+  - Database connection error detection
+
+- **Connection Test Endpoint**: `src/app/api/test/route.ts`
+  - New API route to verify Supabase connection
+  - Useful for debugging deployment issues
+  - Returns connection status and error details
+
+### 3. Environment Configuration
+- **Environment Variables**: `.env.local`
+  ```
+  NEXT_PUBLIC_SUPABASE_URL=https://bxpbtkxoxogsxhtwiwtn.supabase.co
+  NEXT_PUBLIC_SUPABASE_ANON_KEY=[anon-key]
+  SUPABASE_SERVICE_ROLE_KEY=[service-role-key]
+  ```
+
+- **Vercel Configuration**: `vercel.json`
+  - Environment variable mapping for deployment
+  - Function timeout settings
+  - Build configuration
+
+### 4. Database Schema Setup
+- **Schema Script**: `supabase-schema.sql`
+  ```sql
+  -- Complete database schema for Supabase
+  -- Includes tables: employees, time_entries, punch_records
+  -- Row Level Security policies
+  -- Indexes for performance
+  ```
+
+- **Setup Script**: `setup-supabase.js`
+  - Automated database setup instructions
+  - Schema validation and deployment guide
+
+### 5. Documentation Updates
+- **README.md**: Updated with Supabase and Vercel deployment instructions
+- **VERCEL_DEPLOYMENT.md**: Comprehensive deployment guide
+- **CLAUDE.md**: This context file with migration details
+
+## Supabase Database Schema
+```sql
+-- Employees table
+CREATE TABLE employees (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Time entries table
+CREATE TABLE time_entries (
+  id SERIAL PRIMARY KEY,
+  employee_name TEXT NOT NULL,
+  date DATE NOT NULL,
+  hours REAL NOT NULL,
+  lunch_taken BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Punch records table
+CREATE TABLE punch_records (
+  id SERIAL PRIMARY KEY,
+  employee_name TEXT NOT NULL,
+  date DATE NOT NULL,
+  day_of_week TEXT NOT NULL,
+  punch_in_time TEXT,
+  punch_out_time TEXT,
+  lunch_start_time TEXT,
+  lunch_end_time TEXT,
+  total_hours REAL DEFAULT 0,
+  is_off_day BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Indexes and constraints
+CREATE INDEX idx_punch_records_employee_date ON punch_records(employee_name, date);
+CREATE UNIQUE INDEX uniq_punch_employee_date ON punch_records(employee_name, date);
+
+-- Row Level Security
+ALTER TABLE employees ENABLE ROW LEVEL SECURITY;
+ALTER TABLE time_entries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE punch_records ENABLE ROW LEVEL SECURITY;
+
+-- Policies
+CREATE POLICY "Allow all operations on employees" ON employees FOR ALL USING (true);
+CREATE POLICY "Allow all operations on time_entries" ON time_entries FOR ALL USING (true);
+CREATE POLICY "Allow all operations on punch_records" ON punch_records FOR ALL USING (true);
+```
+
+## Deployment Configuration
+
+### Vercel Environment Variables
+```
+NEXT_PUBLIC_SUPABASE_URL=https://bxpbtkxoxogsxhtwiwtn.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+### Supabase Project Details
+- **Project ID**: bxpbtkxoxogsxhtwiwtn
+- **Project URL**: https://bxpbtkxoxogsxhtwiwtn.supabase.co
+- **Status**: ✅ Database schema deployed and tested
+- **Tables**: 3 (employees, time_entries, punch_records)
+
+## GitHub Commits Made
+
+### Commit 1: Initial Supabase Integration
+```
+"Add Supabase integration and Vercel deployment support
+
+- Add Supabase client configuration and database implementation
+- Update database layer to support both Supabase and SQLite
+- Add Vercel deployment configuration
+- Create Supabase database schema setup script
+- Update documentation with deployment instructions
+- Install @supabase/supabase-js dependency"
+```
+
+### Commit 2: Error Handling Improvements
+```
+"Improve error handling and add database setup tools
+
+- Enhanced employee API with better error messages for Supabase issues
+- Added test API endpoint to verify database connection
+- Created setup script for Supabase database schema
+- Improved error handling for missing tables and connection issues"
+```
+
+## Files Created/Modified
+
+### New Files Created:
+- ✅ `src/lib/supabase.ts` - Supabase client configuration
+- ✅ `src/lib/db-supabase.ts` - Supabase database implementation
+- ✅ `supabase-schema.sql` - Database schema setup script
+- ✅ `vercel.json` - Vercel deployment configuration
+- ✅ `VERCEL_DEPLOYMENT.md` - Deployment documentation
+- ✅ `setup-supabase.js` - Database setup helper script
+- ✅ `src/app/api/test/route.ts` - Connection test endpoint
+
+### Files Modified:
+- ✅ `src/lib/database.ts` - Updated to use Supabase implementation
+- ✅ `src/app/api/employees/route.ts` - Enhanced error handling
+- ✅ `package.json` - Added @supabase/supabase-js dependency
+- ✅ `README.md` - Updated with deployment instructions
+- ✅ `CLAUDE.md` - Added migration documentation
+
+## Migration Status: ✅ COMPLETED
+
+**All migration tasks completed successfully:**
+- ✅ Supabase client configured and tested
+- ✅ Database schema deployed to Supabase
+- ✅ Vercel environment variables configured
+- ✅ Application deployed and functional
+- ✅ All API endpoints working with Supabase
+- ✅ Error handling improved for production use
+- ✅ Documentation updated with deployment guide
+
+## Testing Results
+- ✅ Database connection: Working
+- ✅ Employee management: Working
+- ✅ Punch clock functionality: Working
+- ✅ Timecard generation: Working
+- ✅ CSV export: Working
+- ✅ Error handling: Improved
+
+## Next Steps (Optional)
+- Monitor Vercel deployment performance
+- Set up automated backups in Supabase
+- Consider adding authentication for multi-user access
+- Implement data retention policies
+- Add monitoring and analytics
+
+---
+
+**Migration completed successfully on:** August 28, 2025
+**Status:** Production Ready ✅

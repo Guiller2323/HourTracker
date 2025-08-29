@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { markOffDay } from '@/lib/db';
+import { markOffDay } from '@/lib/database';
 
 export async function POST(request: NextRequest) {
   try {

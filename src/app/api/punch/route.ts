@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { recordPunch, getCurrentPunchStatus, getEmployees } from '@/lib/db';
+import { recordPunch, getCurrentPunchStatus, getEmployees } from '@/lib/database';
 
 export async function POST(request: NextRequest) {
   try {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getWeeklyTimecard, getEmployees } from '@/lib/db';
+import { getWeeklyTimecard, getEmployees } from '@/lib/database';
 
 export async function GET(request: NextRequest) {
   try {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { exportTimecardToCSV } from '@/lib/db';
+import { exportTimecardToCSV } from '@/lib/database';
 
 export async function GET(request: NextRequest) {
   try {

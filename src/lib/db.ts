@@ -1,5 +1,13 @@
 import { Pool } from 'pg';
 
+// Guard: This legacy module must not be used on Vercel
+if (process.env.VERCEL) {
+  throw new Error(
+    'Legacy db.ts (SQLite/Postgres direct) was imported on Vercel. API should import from "@/lib/database" which proxies to Supabase. '
+    + 'Please ensure all API routes use "@/lib/database" and redeploy.'
+  );
+}
+
 export interface TimeEntry {
   id: number;
   employee_name: string;

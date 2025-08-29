@@ -1,6 +1,6 @@
 # Employee Time Tracker
 
-A modern time-tracking desktop application built with Next.js and designed for easy desktop deployment with Tauri.
+A modern time-tracking application built with Next.js that can be deployed as a web app on Vercel with Supabase or as a desktop application with Tauri.
 
 ## Features
 
@@ -8,13 +8,33 @@ A modern time-tracking desktop application built with Next.js and designed for e
 - **Employee Time Entry**: Input fields for employee name, hours worked, and lunch break tracking
 - **Automatic Lunch Calculation**: Automatically deducts 0.5 hours when lunch break is selected
 - **Weekly Reports**: Generate and view weekly time reports grouped by employee
-- **SQLite Database**: Local database storage for all time entries
+- **Supabase Database**: Cloud database storage for all time entries (Vercel deployment)
+- **SQLite Database**: Local database storage for desktop deployment
 - **Toast Notifications**: User-friendly feedback for all actions
 - **Responsive Design**: Works well on different screen sizes
+- **Punch Clock**: Real-time employee punch in/out system
 
-## Getting Started
+## Quick Start Options
 
-### Development Server
+### Option 1: Vercel Deployment with Supabase (Recommended for Web)
+
+1. **Set up Supabase Database**:
+   - Go to [supabase.com](https://supabase.com) and create a new project
+   - In your Supabase dashboard, go to SQL Editor
+   - Run the SQL script from `supabase-schema.sql` to create the database schema
+   - Go to Settings > API to get your project URL and API keys
+
+2. **Deploy to Vercel**:
+   - Connect your GitHub repository to Vercel
+   - Add the following environment variables in Vercel:
+     ```
+     NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+     NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+     SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+     ```
+   - Deploy!
+
+### Option 2: Local Development
 
 1. Install dependencies:
 ```bash
@@ -28,14 +48,7 @@ npm run dev
 
 3. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
-### Building for Production
-
-```bash
-npm run build
-npm start
-```
-
-## Desktop App with Tauri (Optional)
+### Option 3: Desktop App with Tauri
 
 To package this as a lightweight desktop application:
 
@@ -60,6 +73,30 @@ npx tauri dev
 npx tauri build
 ```
 
+## Vercel Deployment
+
+To deploy this application to Vercel with Supabase:
+
+1. **Connect Repository**:
+   - Import your GitHub repository to Vercel
+   - Vercel will automatically detect it as a Next.js project
+
+2. **Environment Variables**:
+   In your Vercel dashboard, add these environment variables:
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+   ```
+
+3. **Database Setup**:
+   - Run the SQL script from `supabase-schema.sql` in your Supabase SQL Editor
+   - Enable Row Level Security (RLS) on all tables if needed
+
+4. **Deploy**:
+   - Push your changes to GitHub
+   - Vercel will automatically redeploy with the new environment variables
+
 ## Usage
 
 1. **Add Time Entry**:
@@ -77,33 +114,74 @@ npx tauri build
 
 ## Database
 
-The application uses SQLite for local data storage. The database file (`timetracker.db`) is created automatically in the project root when you first add an entry.
+The application supports two database configurations:
+
+### Supabase (Cloud - for Vercel deployment)
+- **Connection**: Uses Supabase client library
+- **Environment Variables**:
+  - `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Public anon key for client-side operations
+  - `SUPABASE_SERVICE_ROLE_KEY`: Secret service role key for server-side operations
+
+### SQLite (Local - for desktop deployment)
+- **Connection**: Local SQLite database file (`timetracker.db`)
+- **Automatic Setup**: Database and tables are created automatically on first use
 
 ### Database Schema
 
 ```sql
+-- Employees table
+CREATE TABLE employees (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Time entries table
 CREATE TABLE time_entries (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id SERIAL PRIMARY KEY,
   employee_name TEXT NOT NULL,
-  date TEXT NOT NULL,
+  date DATE NOT NULL,
   hours REAL NOT NULL,
-  lunch_taken INTEGER NOT NULL DEFAULT 0,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  lunch_taken BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Punch records table
+CREATE TABLE punch_records (
+  id SERIAL PRIMARY KEY,
+  employee_name TEXT NOT NULL,
+  date DATE NOT NULL,
+  day_of_week TEXT NOT NULL,
+  punch_in_time TEXT,
+  punch_out_time TEXT,
+  lunch_start_time TEXT,
+  lunch_end_time TEXT,
+  total_hours REAL DEFAULT 0,
+  is_off_day BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
 );
 ```
 
 ## API Routes
 
-- `POST /api/saveEntry` - Save a new time entry
-- `GET /api/getReport` - Retrieve current week's entries
+- `GET/POST /api/employees` - Employee management (list, add, delete)
+- `POST /api/punch` - Punch clock operations (in/out/lunch)
+- `POST /api/offday` - Mark employee off days
+- `GET /api/timecard` - Retrieve employee timecards
+- `GET /api/export/csv` - Export timecard data to CSV
 
 ## Technology Stack
 
 - **Frontend**: Next.js 15, React 19, TypeScript
 - **Styling**: Tailwind CSS
-- **Database**: better-sqlite3
+- **Database**: Supabase (cloud) / SQLite (local)
+- **Database Client**: @supabase/supabase-js / better-sqlite3
 - **Notifications**: react-toastify
 - **Build Tool**: Turbopack (for faster development)
+- **Deployment**: Vercel (web) / Tauri (desktop)
 
 ## Project Structure
 
@@ -111,15 +189,33 @@ CREATE TABLE time_entries (
 src/
   app/
     api/
-      getReport/
-        route.ts          # API route for fetching weekly reports
-      saveEntry/
-        route.ts          # API route for saving time entries
+      employees/
+        route.ts          # API route for employee management
+      export/
+        csv/
+          route.ts        # API route for CSV export
+      offday/
+        route.ts          # API route for marking off days
+      punch/
+        route.ts          # API route for punch clock operations
+      timecard/
+        route.ts          # API route for timecard operations
     globals.css           # Global styles and Tailwind imports
     layout.tsx            # Root layout component
+    page-desktop.tsx      # Desktop-specific page component
     page.tsx              # Main application page
+  components/
+    EmployeeManager.tsx   # Employee management component
+    PunchClock.tsx        # Punch clock interface component
+    TimecardView.tsx      # Timecard viewing component
   lib/
-    database.ts           # Database utilities and functions
+    database.ts           # Database proxy (uses Supabase or SQLite)
+    db-supabase.ts        # Supabase database implementation
+    db.ts                 # Legacy PostgreSQL/SQLite implementation
+    supabase.ts           # Supabase client configuration
+supabase-schema.sql       # Database schema for Supabase setup
+vercel.json              # Vercel deployment configuration
+.env.local               # Environment variables (local development)
 ```
 
 ## Customization

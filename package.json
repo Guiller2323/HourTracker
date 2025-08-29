@@ -11,10 +11,11 @@
     "dev:4001": "next dev -p 4001",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
-  "tauri:build": "tauri build",
-  "migrate:sqlite": "node scripts/migrate-sqlite-to-postgres.js"
+    "tauri:build": "tauri build",
+    "migrate:sqlite": "node scripts/migrate-sqlite-to-postgres.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.56.0",
     "date-fns": "^4.1.0",
     "next": "15.5.2",
     "pg": "^8.12.0",
@@ -33,11 +34,11 @@
     "@types/react-datepicker": "^6.2.0",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.21",
+    "better-sqlite3": "^12.2.0",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-  "typescript": "^5",
-  "better-sqlite3": "^12.2.0"
+    "typescript": "^5"
   }
 }

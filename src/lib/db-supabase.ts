@@ -30,6 +30,11 @@ export interface Employee {
 // Use admin client for database operations if available, otherwise use regular client
 const dbClient = supabaseAdmin || supabase;
 
+// Log which client is being used for debugging
+if (process.env.NODE_ENV === 'development') {
+  console.log('Using Supabase client:', supabaseAdmin ? 'Admin (Service Role)' : 'Regular (Anonymous)');
+}
+
 // Utility function to calculate hours between two times (12-hour strings like "9:00 AM")
 function calculateHours(startTime: string, endTime: string, lunchStart?: string, lunchEnd?: string): number {
   const parseTime = (timeStr: string): Date => {
@@ -128,10 +133,12 @@ export async function getEmployees(): Promise<Employee[]> {
 }
 
 export async function recordPunch(employeeName: string, punchType: 'IN' | 'OUT' | 'LUNCH' | 'LUNCH_END') {
+  // Use Eastern Time consistently
   const now = new Date();
-  const date = now.toISOString().split('T')[0];
-  const time = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-  const dayOfWeek = now.toLocaleDateString('en-US', { weekday: 'long' });
+  const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
+  const date = easternTime.toISOString().split('T')[0];
+  const time = easternTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  const dayOfWeek = easternTime.toLocaleDateString('en-US', { weekday: 'long' });
 
   // Check if record exists for today
   const { data: existing } = await dbClient
@@ -220,7 +227,8 @@ async function updateTotalHours(employeeName: string, date: string) {
 }
 
 export async function markOffDay(employeeName: string, date: string) {
-  const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' });
+  const easternTime = new Date(date + 'T12:00:00');
+  const dayOfWeek = easternTime.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'America/New_York' });
 
   const { data, error } = await dbClient
     .from('punch_records')

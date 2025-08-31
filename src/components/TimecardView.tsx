@@ -31,6 +31,21 @@ export default function TimecardView({
   const [totalHours, setTotalHours] = useState(0);
   const [loading, setLoading] = useState(false);
 
+  // Convert decimal hours to HH:MM format
+  const formatHours = (decimalHours: number): string => {
+    if (decimalHours === 0) return '0:00';
+    
+    const hours = Math.floor(decimalHours);
+    const minutes = Math.round((decimalHours - hours) * 60);
+    
+    // Handle edge case where rounding gives us 60 minutes
+    if (minutes === 60) {
+      return `${hours + 1}:00`;
+    }
+    
+    return `${hours}:${minutes.toString().padStart(2, '0')}`;
+  };
+
   useEffect(() => {
     if (selectedEmployee) {
       fetchTimecard();
@@ -249,7 +264,7 @@ export default function TimecardView({
                         {isOffDay ? '' : (record?.lunch_end_time || '')}
                       </td>
                       <td className="border border-green-600 px-3 py-2 text-center font-bold">
-                        {isOffDay ? '0.00' : (record?.total_hours?.toFixed(2) || '0.00')}
+                        {isOffDay ? '0:00' : formatHours(record?.total_hours || 0)}
                       </td>
                       <td className="border border-green-600 px-3 py-2 text-center print:hidden">
                         {!isOffDay && (
@@ -271,7 +286,7 @@ export default function TimecardView({
                     Total Hours:
                   </td>
                   <td className="border border-green-600 px-3 py-2 text-center font-bold text-lg">
-                    {totalHours.toFixed(2)}
+                    {formatHours(totalHours)}
                   </td>
                   <td className="border border-green-600 print:hidden"></td>
                 </tr>

@@ -56,3 +56,31 @@ Expected: HTTP 200 with `application/json` (except CSV export which is `text/csv
 
 ## 7) Still stuck?
 - Share the failing URL, HTTP status, and the console stack trace (file/line of `response.json()`), and we can pinpoint the exact cause.
+
+## 8) Week ending shows Friday or punches appear on wrong day
+Symptoms
+- Timecard header shows Week Ending on Friday instead of Saturday.
+- Week range or rows include the wrong days (e.g., Sunday 8/31 shown when the week should end Saturday 9/6).
+- Punches recorded on Monday appear under Sunday in the timecard.
+
+Root cause
+- Mismatched week logic and timezone drift:
+  - Some code used Monday–Sunday while others used Sunday–Saturday.
+  - Date computations used local/UTC without a fixed timezone, causing day shifts around midnight UTC.
+
+Fix implemented
+- Standardize to Sunday–Saturday with week ending on Saturday across app:
+  - Frontend `TimecardView` snaps any picked date to Saturday and generates days anchored at noon to avoid timezone drift.
+  - API defaults (timecard, CSV) compute week ending in America/New_York (ET).
+  - `getCurrentPunchStatus` also uses ET for today to match `recordPunch`.
+  - README/tests updated to reflect Saturday week ending.
+
+How to verify
+1) In the UI, select any date in the timecard date picker. The Week Ending should display the Saturday of that week (e.g., 9/6/2025).
+2) The table should list Sunday → Saturday for that week (e.g., 8/31 to 9/6) and Monday punches show on Monday.
+3) CSV export for the same employee/week lists dates in the same Sunday→Saturday range.
+
+If you still see Friday
+- Hard refresh the page (clear cached JS).
+- Ensure system time and timezone are correct.
+- Check server logs for errors and confirm you're on the latest main commit.

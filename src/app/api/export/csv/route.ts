@@ -14,12 +14,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Default to current week's Sunday if no date provided
+    // Default to current week's Saturday (traditional Sunday–Saturday week)
     const weekEnding = weekEndingDate || (() => {
       const today = new Date();
-      const sunday = new Date(today);
-      sunday.setDate(today.getDate() + (7 - today.getDay()) % 7);
-      return sunday.toISOString().split('T')[0];
+      const saturday = new Date(today);
+      const daysUntilSaturday = today.getDay() === 0 ? 6 : 6 - today.getDay();
+      saturday.setDate(today.getDate() + daysUntilSaturday);
+      return saturday.toISOString().split('T')[0];
     })();
     
   const csvContent = await exportTimecardToCSV(employeeName, weekEnding);

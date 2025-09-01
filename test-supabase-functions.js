@@ -174,10 +174,11 @@ async function testDatabaseFunctions() {
       const employees = await dbModule.getEmployees();
       if (employees.length > 0) {
         const testEmployee = employees[0];
-        const today = new Date();
-        const sunday = new Date(today);
-        sunday.setDate(today.getDate() + (7 - today.getDay()) % 7);
-        const weekEndingDate = sunday.toISOString().split('T')[0];
+  const today = new Date();
+  const saturday = new Date(today);
+  const daysUntilSaturday = today.getDay() === 0 ? 6 : 6 - today.getDay();
+  saturday.setDate(today.getDate() + daysUntilSaturday);
+  const weekEndingDate = saturday.toISOString().split('T')[0];
         
         const timecard = await dbModule.getWeeklyTimecard(testEmployee.name, weekEndingDate);
         log(`   ✅ getWeeklyTimecard() successful - Found ${timecard.length} records`, 'green');

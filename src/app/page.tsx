@@ -76,8 +76,8 @@ export default function Home() {
         
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Employee Time Tracker</h1>
-          <p className="text-gray-600">La Quinta Inn & Suites</p>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">La Quinta Inn & Suites</h1>
+          <p className="text-gray-600">Employee Time Tracker</p>
         </div>
 
         {/* Tab Navigation */}

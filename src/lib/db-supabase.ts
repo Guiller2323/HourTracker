@@ -135,10 +135,10 @@ export async function getEmployees(): Promise<Employee[]> {
 export async function recordPunch(employeeName: string, punchType: 'IN' | 'OUT' | 'LUNCH' | 'LUNCH_END') {
   // Use Eastern Time consistently
   const now = new Date();
-  const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
-  const date = easternTime.toISOString().split('T')[0];
-  const time = easternTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-  const dayOfWeek = easternTime.toLocaleDateString('en-US', { weekday: 'long' });
+  const tz = 'America/New_York';
+  const date = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now); // YYYY-MM-DD
+  const time = new Intl.DateTimeFormat('en-US', { timeZone: tz, hour: 'numeric', minute: '2-digit', hour12: true }).format(now);
+  const dayOfWeek = new Intl.DateTimeFormat('en-US', { timeZone: tz, weekday: 'long' }).format(now);
 
   // Check if record exists for today
   const { data: existing } = await dbClient
@@ -281,7 +281,8 @@ export async function getWeeklyTimecard(employeeName: string, weekEndingDate: st
 }
 
 export async function getCurrentPunchStatus(employeeName: string): Promise<'OUT' | 'IN' | 'LUNCH'> {
-  const today = new Date().toISOString().split('T')[0];
+  const tz = 'America/New_York';
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 
   const { data: record } = await dbClient
     .from('punch_records')
@@ -314,18 +315,20 @@ export async function saveTimeEntry(employeeName: string, date: string, hours: n
 
 export async function getWeeklyReport(): Promise<TimeEntry[]> {
   const today = new Date();
-  const monday = new Date(today);
-  monday.setDate(today.getDate() - today.getDay() + 1);
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  const mondayStr = monday.toISOString().split('T')[0];
+  // Traditional week: Sunday to Saturday, ending Saturday
+  const saturday = new Date(today);
+  const daysUntilSaturday = today.getDay() === 0 ? 6 : 6 - today.getDay();
+  saturday.setDate(today.getDate() + daysUntilSaturday);
+  const sunday = new Date(saturday);
+  sunday.setDate(saturday.getDate() - 6);
   const sundayStr = sunday.toISOString().split('T')[0];
+  const saturdayStr = saturday.toISOString().split('T')[0];
 
   const { data, error } = await dbClient
     .from('time_entries')
     .select('id, employee_name, date, hours, lunch_taken')
-    .gte('date', mondayStr)
-    .lte('date', sundayStr)
+  .gte('date', sundayStr)
+  .lte('date', saturdayStr)
     .order('employee_name')
     .order('date');
 

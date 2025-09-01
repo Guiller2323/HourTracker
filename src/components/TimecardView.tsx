@@ -55,12 +55,14 @@ export default function TimecardView({
   const fetchTimecard = async () => {
     setLoading(true);
     try {
+      console.debug('Fetching timecard', { selectedEmployee, weekEndingDate });
       const response = await fetch(
         `/api/timecard?employee=${encodeURIComponent(selectedEmployee)}&weekEnding=${weekEndingDate}`
       );
       const data = await response.json();
 
       if (response.ok) {
+        console.debug('Timecard data received', data);
         setTimecard(data.timecard);
         setTotalHours(data.totalHours);
       } else {
@@ -140,21 +142,22 @@ export default function TimecardView({
     window.print();
   };
 
-  // Generate all 7 days of the week
+  // Generate all 7 days of the week (anchor at noon to avoid timezone drift)
   const generateWeekDays = () => {
-    const weekEnding = new Date(weekEndingDate);
-    const days = [];
-    
+    if (!weekEndingDate) return [] as { date: string; dayName: string; shortDay: string }[];
+    const weekEnding = new Date(weekEndingDate + 'T12:00:00');
+    const days: { date: string; dayName: string; shortDay: string }[] = [];
     for (let i = 6; i >= 0; i--) {
       const day = new Date(weekEnding);
       day.setDate(weekEnding.getDate() - i);
+      const iso = new Date(day.getTime());
+      const dateStr = new Date(iso.toISOString().slice(0, 10) + 'T12:00:00').toISOString().split('T')[0];
       days.push({
-        date: day.toISOString().split('T')[0],
+        date: dateStr,
         dayName: day.toLocaleDateString('en-US', { weekday: 'long' }),
         shortDay: day.toLocaleDateString('en-US', { weekday: 'short' })
       });
     }
-    
     return days;
   };
 
@@ -185,11 +188,17 @@ export default function TimecardView({
             type="date"
             value={weekEndingDate}
             onChange={(e) => {
-              const selectedDate = new Date(e.target.value + 'T12:00:00');
+              const value = e.target.value;
+              if (!value) {
+                onWeekChange('');
+                return;
+              }
+              const selectedDate = new Date(value + 'T12:00:00');
               const saturday = new Date(selectedDate);
               const daysUntilSaturday = selectedDate.getDay() === 6 ? 0 : (6 - selectedDate.getDay() + 7) % 7;
               saturday.setDate(selectedDate.getDate() + daysUntilSaturday);
-              onWeekChange(saturday.toISOString().split('T')[0]);
+              const saturdayStr = saturday.toISOString().split('T')[0];
+              onWeekChange(saturdayStr);
             }}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
           />

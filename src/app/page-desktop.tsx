@@ -59,19 +59,18 @@ export default function Home() {
   };
 
   const handleShowReport = () => {
-    // Get current week's entries
+    // Get current week's entries (Sunday to Saturday)
     const today = new Date();
-    const monday = new Date(today);
-    monday.setDate(today.getDate() - today.getDay() + 1);
-    
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-    
-    const mondayStr = monday.toISOString().split('T')[0];
+    const saturday = new Date(today);
+    const daysUntilSaturday = today.getDay() === 0 ? 6 : 6 - today.getDay();
+    saturday.setDate(today.getDate() + daysUntilSaturday);
+    const sunday = new Date(saturday);
+    sunday.setDate(saturday.getDate() - 6);
     const sundayStr = sunday.toISOString().split('T')[0];
+    const saturdayStr = saturday.toISOString().split('T')[0];
 
     const weeklyEntries = reportData.filter(entry => 
-      entry.date >= mondayStr && entry.date <= sundayStr
+      entry.date >= sundayStr && entry.date <= saturdayStr
     );
 
     setReportData(weeklyEntries);

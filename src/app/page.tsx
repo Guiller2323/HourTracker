@@ -25,13 +25,17 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'punch' | 'timecard'>('punch');
 
   useEffect(() => {
-    // Set default week ending date (Saturday of current week)
+    // Set default week ending date (Saturday of current week)  
     // Traditional timecard week runs Sunday to Saturday
     const today = new Date();
+    console.log('Today:', today.toDateString(), 'Day:', today.getDay());
     const saturday = new Date(today);
     const daysUntilSaturday = today.getDay() === 0 ? 6 : 6 - today.getDay();
+    console.log('Days until Saturday:', daysUntilSaturday);
     saturday.setDate(today.getDate() + daysUntilSaturday);
-    setWeekEndingDate(saturday.toISOString().split('T')[0]);
+    const weekEndingStr = saturday.toISOString().split('T')[0];
+    console.log('Week ending Saturday:', weekEndingStr);
+    setWeekEndingDate(weekEndingStr);
     
     fetchEmployees();
   }, []);
@@ -125,10 +129,6 @@ export default function Home() {
           />
         )}
 
-        {/* Footer */}
-        <div className="mt-8 text-center text-sm text-gray-500">
-          <p>Built with Next.js • Traditional timecard formatting with modern features</p>
-        </div>
       </div>
 
       <ToastContainer

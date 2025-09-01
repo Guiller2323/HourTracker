@@ -84,3 +84,16 @@ If you still see Friday
 - Hard refresh the page (clear cached JS).
 - Ensure system time and timezone are correct.
 - Check server logs for errors and confirm you're on the latest main commit.
+
+## 9) Punch Clock time doesn’t match Timecard entry time
+Symptoms
+- Punch Clock shows local time (e.g., 1:55 PM), but the Timecard shows a different time (e.g., 2:55 PM) or wrong day for lunch.
+
+Root cause
+- Punch storage uses Eastern Time (ET) while the clock UI displayed the browser’s local timezone, leading to mismatched display vs stored times.
+
+Fix implemented
+- Punch Clock now displays current time and date in ET and shows ET in toast messages to match stored times.
+
+How to verify
+- Clock reads ET and matches the times that appear in the timecard rows after punching.

@@ -27,17 +27,20 @@ export default function PunchClock({
     setMounted(true);
     const updateTime = () => {
       const now = new Date();
+      const tz = 'America/New_York';
       setCurrentTime(now.toLocaleTimeString('en-US', {
         hour: 'numeric',
         minute: '2-digit',
         second: '2-digit',
-        hour12: true
+        hour12: true,
+        timeZone: tz
       }));
       setCurrentDate(now.toLocaleDateString('en-US', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
-        day: 'numeric'
+        day: 'numeric',
+        timeZone: tz
       }));
     };
 
@@ -85,9 +88,10 @@ export default function PunchClock({
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setPunchStatus(data.status);
-        toast.success(`Punched ${type} at ${new Date().toLocaleTimeString()}`);
+  const data = await response.json();
+  setPunchStatus(data.status);
+  const etNow = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/New_York' });
+  toast.success(`Punched ${type} at ${etNow} ET`);
       } else if (response.status === 404) {
         // Employee is inactive/deleted
         toast.error(`Employee "${selectedEmployee}" is not active`);

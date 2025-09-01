@@ -27,7 +27,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-  const result = await addEmployee(name.trim());
+    // Log environment status for debugging
+    console.log('Environment variables status:', {
+      hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY
+    });
+
+    console.log('Attempting to add employee:', name.trim());
+    const result = await addEmployee(name.trim());
 
     return NextResponse.json({
       success: true,

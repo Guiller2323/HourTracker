@@ -199,12 +199,12 @@ export default function TimecardView({
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6 print:mb-4">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6 print:mb-4">
+        <div className="min-w-0">
           <h2 className="text-2xl font-bold text-gray-800">Employee Timecard</h2>
           <p className="text-gray-600">Week Ending: {formatIsoAsLongET(weekEndingDate)}</p>
         </div>
-        <div className="flex gap-2 print:hidden">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto print:hidden">
           <input
             type="date"
             value={weekEndingDate}
@@ -221,17 +221,17 @@ export default function TimecardView({
               const saturdayStr = saturday.toISOString().split('T')[0];
               onWeekChange(saturdayStr);
             }}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
           />
           <button
             onClick={downloadCSV}
-            className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
+            className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors w-full sm:w-auto"
           >
             Export CSV
           </button>
           <button
             onClick={printTimecard}
-            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors w-full sm:w-auto"
           >
             Print
           </button>

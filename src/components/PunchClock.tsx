@@ -128,7 +128,7 @@ export default function PunchClock({
   const statusDisplay = getStatusDisplay();
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md mx-auto">
+  <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-md mx-auto">
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800 mb-2">Punch Clock</h2>
         <div className="text-3xl font-mono text-blue-600 mb-4">
@@ -139,14 +139,14 @@ export default function PunchClock({
         </div>
       </div>
 
-      <div className="mb-6">
+    <div className="mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Select Employee
         </label>
         <select
           value={selectedEmployee}
           onChange={(e) => onEmployeeChange(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           suppressHydrationWarning
         >
           <option value="">Choose an employee...</option>
@@ -166,7 +166,7 @@ export default function PunchClock({
         </div>
       )}
 
-      <div className="space-y-3">
+  <div className="space-y-3">
         <button
           onClick={() => handlePunch(nextAction.action as any)}
           disabled={!selectedEmployee || loading}

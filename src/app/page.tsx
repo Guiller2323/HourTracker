@@ -69,8 +69,8 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-7xl mx-auto p-8 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 p-3 sm:p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-7xl mx-auto p-4 sm:p-8 relative overflow-hidden">
         {/* Header gradient bar */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-600"></div>
         
@@ -81,8 +81,8 @@ export default function Home() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex justify-center mb-8">
-          <div className="bg-gray-100 rounded-lg p-1 flex">
+        <div className="flex justify-center mb-6 sm:mb-8">
+          <div className="bg-gray-100 rounded-lg p-1 flex w-full max-w-md">
             <button
               onClick={() => setActiveTab('punch')}
               className={`px-6 py-2 rounded-md font-medium transition-all ${

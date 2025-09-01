@@ -250,18 +250,18 @@ export async function markOffDay(employeeName: string, date: string) {
 }
 
 export async function getWeeklyTimecard(employeeName: string, weekEndingDate: string): Promise<PunchRecord[]> {
-  const weekEnding = new Date(weekEndingDate);
-  const monday = new Date(weekEnding);
-  monday.setDate(weekEnding.getDate() - 6);
-  const mondayStr = monday.toISOString().split('T')[0];
-  const sundayStr = weekEndingDate;
+  const weekEnding = new Date(weekEndingDate); // This is Saturday
+  const sunday = new Date(weekEnding);
+  sunday.setDate(weekEnding.getDate() - 6); // Go back 6 days to get Sunday
+  const sundayStr = sunday.toISOString().split('T')[0];
+  const saturdayStr = weekEndingDate;
 
   const { data, error } = await dbClient
     .from('punch_records')
     .select('*')
     .eq('employee_name', employeeName)
-    .gte('date', mondayStr)
-    .lte('date', sundayStr)
+    .gte('date', sundayStr)
+    .lte('date', saturdayStr)
     .order('date');
 
   if (error) throw error;

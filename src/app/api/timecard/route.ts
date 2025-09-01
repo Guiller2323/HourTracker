@@ -25,12 +25,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Default to current week's Sunday if no date provided
+    // Default to current week's Saturday if no date provided
+    // Traditional timecard week runs Sunday to Saturday
     const weekEnding = weekEndingDate || (() => {
       const today = new Date();
-      const sunday = new Date(today);
-      sunday.setDate(today.getDate() + (7 - today.getDay()) % 7);
-      return sunday.toISOString().split('T')[0];
+      const saturday = new Date(today);
+      const daysUntilSaturday = today.getDay() === 0 ? 6 : 6 - today.getDay();
+      saturday.setDate(today.getDate() + daysUntilSaturday);
+      return saturday.toISOString().split('T')[0];
     })();
     
   const timecard = await getWeeklyTimecard(employeeName, weekEnding);

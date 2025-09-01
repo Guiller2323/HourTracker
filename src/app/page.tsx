@@ -26,7 +26,7 @@ export default function Home() {
 
   useEffect(() => {
     // Set default week ending date (Saturday of current week)
-    // Week runs Sunday to Saturday, so we need to find this Saturday
+    // Traditional timecard week runs Sunday to Saturday
     const today = new Date();
     const saturday = new Date(today);
     const daysUntilSaturday = today.getDay() === 0 ? 6 : 6 - today.getDay();
@@ -73,7 +73,7 @@ export default function Home() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Employee Time Tracker</h1>
-          <p className="text-gray-600">Modern timecard system with traditional formatting</p>
+          <p className="text-gray-600">La Quinta Inn & Suites</p>
         </div>
 
         {/* Tab Navigation */}

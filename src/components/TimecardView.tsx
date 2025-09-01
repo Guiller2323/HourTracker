@@ -184,7 +184,13 @@ export default function TimecardView({
           <input
             type="date"
             value={weekEndingDate}
-            onChange={(e) => onWeekChange(e.target.value)}
+            onChange={(e) => {
+              const selectedDate = new Date(e.target.value + 'T12:00:00');
+              const saturday = new Date(selectedDate);
+              const daysUntilSaturday = selectedDate.getDay() === 6 ? 0 : (6 - selectedDate.getDay() + 7) % 7;
+              saturday.setDate(selectedDate.getDate() + daysUntilSaturday);
+              onWeekChange(saturday.toISOString().split('T')[0]);
+            }}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
           />
           <button

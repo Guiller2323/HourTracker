@@ -25,10 +25,11 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'punch' | 'timecard'>('punch');
 
   useEffect(() => {
-    // Set default week ending date (current Sunday)
+    // Set default week ending date (next Sunday or current Sunday if today is Sunday)
     const today = new Date();
     const sunday = new Date(today);
-    sunday.setDate(today.getDate() + (7 - today.getDay()) % 7);
+    const daysUntilSunday = today.getDay() === 0 ? 0 : 7 - today.getDay();
+    sunday.setDate(today.getDate() + daysUntilSunday);
     setWeekEndingDate(sunday.toISOString().split('T')[0]);
     
     fetchEmployees();

@@ -28,10 +28,12 @@ export async function GET(request: NextRequest) {
     // Default to current week's Saturday if no date provided
     // Traditional timecard week runs Sunday to Saturday
     const weekEnding = weekEndingDate || (() => {
-      const today = new Date();
-      const saturday = new Date(today);
-      const daysUntilSaturday = today.getDay() === 0 ? 6 : 6 - today.getDay();
-      saturday.setDate(today.getDate() + daysUntilSaturday);
+      const now = new Date();
+      // Compute in ET to avoid UTC rollover skew
+      const etNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+      const saturday = new Date(etNow);
+      const daysUntilSaturday = etNow.getDay() === 0 ? 6 : 6 - etNow.getDay();
+      saturday.setDate(etNow.getDate() + daysUntilSaturday);
       return saturday.toISOString().split('T')[0];
     })();
     

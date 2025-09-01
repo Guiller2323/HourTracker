@@ -31,6 +31,26 @@ export default function TimecardView({
   const [totalHours, setTotalHours] = useState(0);
   const [loading, setLoading] = useState(false);
 
+  // Helpers to format ISO dates reliably without day shifting
+  const formatIsoAsMD = (isoDate: string): string => {
+    if (!isoDate) return '';
+    const m = parseInt(isoDate.slice(5, 7), 10);
+    const d = parseInt(isoDate.slice(8, 10), 10);
+    return `${m}/${d}`;
+  };
+
+  const formatIsoAsLongET = (isoDate: string): string => {
+    if (!isoDate) return '';
+    const d = new Date(isoDate + 'T12:00:00');
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'numeric', day: 'numeric', timeZone: 'America/New_York' });
+  };
+
+  const formatIsoWithWeekdayET = (isoDate: string): string => {
+    if (!isoDate) return '';
+    const d = new Date(isoDate + 'T12:00:00');
+    return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/New_York' });
+  };
+
   // Convert decimal hours to HH:MM format
   const formatHours = (decimalHours: number): string => {
     if (decimalHours === 0) return '0:00';
@@ -154,8 +174,8 @@ export default function TimecardView({
       const dateStr = new Date(iso.toISOString().slice(0, 10) + 'T12:00:00').toISOString().split('T')[0];
       days.push({
         date: dateStr,
-        dayName: day.toLocaleDateString('en-US', { weekday: 'long' }),
-        shortDay: day.toLocaleDateString('en-US', { weekday: 'short' })
+        dayName: day.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'America/New_York' }),
+        shortDay: day.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'America/New_York' })
       });
     }
     return days;
@@ -181,7 +201,7 @@ export default function TimecardView({
       <div className="flex justify-between items-center mb-6 print:mb-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Employee Timecard</h2>
-          <p className="text-gray-600">Week Ending: {new Date(weekEndingDate).toLocaleDateString()}</p>
+          <p className="text-gray-600">Week Ending: {formatIsoAsLongET(weekEndingDate)}</p>
         </div>
         <div className="flex gap-2 print:hidden">
           <input
@@ -223,12 +243,7 @@ export default function TimecardView({
           Employee: {selectedEmployee}
         </div>
         <div className="text-sm text-green-600">
-          Week Ending: {new Date(weekEndingDate).toLocaleDateString('en-US', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          })}
+          Week Ending: {formatIsoWithWeekdayET(weekEndingDate)}
         </div>
       </div>
 
@@ -264,7 +279,7 @@ export default function TimecardView({
                         {day.dayName}
                       </td>
                       <td className="border border-green-600 px-3 py-2 text-center">
-                        {new Date(day.date).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' })}
+                        {formatIsoAsMD(day.date)}
                       </td>
                       <td className="border border-green-600 px-3 py-2 text-center">
                         {isOffDay ? 'OFF' : (record?.punch_in_time || '')}

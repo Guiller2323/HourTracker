@@ -282,7 +282,9 @@ export async function getWeeklyTimecard(employeeName: string, weekEndingDate: st
 
 export async function getCurrentPunchStatus(employeeName: string): Promise<'OUT' | 'IN' | 'LUNCH'> {
   const tz = 'America/New_York';
-  const today = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  const now = new Date();
+  const etNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const today = etNow.toISOString().split('T')[0];
 
   const { data: record } = await dbClient
     .from('punch_records')

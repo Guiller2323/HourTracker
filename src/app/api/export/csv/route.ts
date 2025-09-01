@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { exportTimecardToCSV } from '@/lib/database';
+import { TIMEZONE } from '@/lib/timezone';
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,10 +18,10 @@ export async function GET(request: NextRequest) {
     // Default to current week's Saturday (traditional Sunday–Saturday week)
     const weekEnding = weekEndingDate || (() => {
       const now = new Date();
-      const etNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
-      const saturday = new Date(etNow);
-      const daysUntilSaturday = etNow.getDay() === 0 ? 6 : 6 - etNow.getDay();
-      saturday.setDate(etNow.getDate() + daysUntilSaturday);
+      const zoned = new Date(now.toLocaleString('en-US', { timeZone: TIMEZONE }));
+      const saturday = new Date(zoned);
+      const daysUntilSaturday = zoned.getDay() === 0 ? 6 : 6 - zoned.getDay();
+      saturday.setDate(zoned.getDate() + daysUntilSaturday);
       return saturday.toISOString().split('T')[0];
     })();
     

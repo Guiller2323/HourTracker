@@ -1,4 +1,5 @@
 import { supabase, supabaseAdmin } from './supabase';
+import { TIMEZONE } from './timezone';
 
 export interface TimeEntry {
   id: number;
@@ -133,9 +134,9 @@ export async function getEmployees(): Promise<Employee[]> {
 }
 
 export async function recordPunch(employeeName: string, punchType: 'IN' | 'OUT' | 'LUNCH' | 'LUNCH_END') {
-  // Use Eastern Time consistently
+  // Use configured timezone consistently
   const now = new Date();
-  const tz = 'America/New_York';
+  const tz = TIMEZONE;
   const date = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now); // YYYY-MM-DD
   const time = new Intl.DateTimeFormat('en-US', { timeZone: tz, hour: 'numeric', minute: '2-digit', hour12: true }).format(now);
   const dayOfWeek = new Intl.DateTimeFormat('en-US', { timeZone: tz, weekday: 'long' }).format(now);
@@ -227,8 +228,8 @@ async function updateTotalHours(employeeName: string, date: string) {
 }
 
 export async function markOffDay(employeeName: string, date: string) {
-  const easternTime = new Date(date + 'T12:00:00');
-  const dayOfWeek = easternTime.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'America/New_York' });
+  const localDate = new Date(date + 'T12:00:00');
+  const dayOfWeek = localDate.toLocaleDateString('en-US', { weekday: 'long', timeZone: TIMEZONE });
 
   const { data, error } = await dbClient
     .from('punch_records')
@@ -281,10 +282,10 @@ export async function getWeeklyTimecard(employeeName: string, weekEndingDate: st
 }
 
 export async function getCurrentPunchStatus(employeeName: string): Promise<'OUT' | 'IN' | 'LUNCH'> {
-  const tz = 'America/New_York';
+  const tz = TIMEZONE;
   const now = new Date();
-  const etNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
-  const today = etNow.toISOString().split('T')[0];
+  const zonedNow = new Date(now.toLocaleString('en-US', { timeZone: tz }));
+  const today = zonedNow.toISOString().split('T')[0];
 
   const { data: record } = await dbClient
     .from('punch_records')
@@ -316,11 +317,13 @@ export async function saveTimeEntry(employeeName: string, date: string, hours: n
 }
 
 export async function getWeeklyReport(): Promise<TimeEntry[]> {
-  const today = new Date();
+  const tz = TIMEZONE;
+  const now = new Date();
+  const zoned = new Date(now.toLocaleString('en-US', { timeZone: tz }));
   // Traditional week: Sunday to Saturday, ending Saturday
-  const saturday = new Date(today);
-  const daysUntilSaturday = today.getDay() === 0 ? 6 : 6 - today.getDay();
-  saturday.setDate(today.getDate() + daysUntilSaturday);
+  const saturday = new Date(zoned);
+  const daysUntilSaturday = zoned.getDay() === 0 ? 6 : 6 - zoned.getDay();
+  saturday.setDate(zoned.getDate() + daysUntilSaturday);
   const sunday = new Date(saturday);
   sunday.setDate(saturday.getDate() - 6);
   const sundayStr = sunday.toISOString().split('T')[0];

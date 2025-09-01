@@ -93,7 +93,13 @@ Root cause
 - Punch storage uses Eastern Time (ET) while the clock UI displayed the browser’s local timezone, leading to mismatched display vs stored times.
 
 Fix implemented
-- Punch Clock now displays current time and date in ET and shows ET in toast messages to match stored times.
+- Punch Clock and backend now use a configurable timezone (default America/Chicago) to match stored times.
 
 How to verify
 - Clock reads ET and matches the times that appear in the timecard rows after punching.
+ 
+Configure timezone
+- Set environment variable to your local TZ:
+  - For both client and server: `NEXT_PUBLIC_TIMEZONE=America/Chicago`
+  - Server-only fallback: `TIMEZONE=America/Chicago`
+  - Examples: America/Chicago (Houston), America/New_York, America/Los_Angeles

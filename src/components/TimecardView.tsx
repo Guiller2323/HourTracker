@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { TIMEZONE } from '@/lib/timezone';
 import { toast } from 'react-toastify';
 
 interface PunchRecord {
@@ -42,13 +43,13 @@ export default function TimecardView({
   const formatIsoAsLongET = (isoDate: string): string => {
     if (!isoDate) return '';
     const d = new Date(isoDate + 'T12:00:00');
-    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'numeric', day: 'numeric', timeZone: 'America/New_York' });
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'numeric', day: 'numeric', timeZone: TIMEZONE });
   };
 
   const formatIsoWithWeekdayET = (isoDate: string): string => {
     if (!isoDate) return '';
     const d = new Date(isoDate + 'T12:00:00');
-    return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/New_York' });
+    return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: TIMEZONE });
   };
 
   // Convert decimal hours to HH:MM format
@@ -174,8 +175,8 @@ export default function TimecardView({
       const dateStr = new Date(iso.toISOString().slice(0, 10) + 'T12:00:00').toISOString().split('T')[0];
       days.push({
         date: dateStr,
-        dayName: day.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'America/New_York' }),
-        shortDay: day.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'America/New_York' })
+        dayName: day.toLocaleDateString('en-US', { weekday: 'long', timeZone: TIMEZONE }),
+        shortDay: day.toLocaleDateString('en-US', { weekday: 'short', timeZone: TIMEZONE })
       });
     }
     return days;

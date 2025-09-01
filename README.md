@@ -227,6 +227,7 @@ vercel.json              # Vercel deployment configuration
 ## Notes
 
 - The application tracks time by calendar week (Sunday to Saturday, week ending on Saturday)
+- Timezone is configurable via `NEXT_PUBLIC_TIMEZONE` (client & server) or `TIMEZONE` (server fallback). Default: America/Chicago.
 - Lunch breaks automatically deduct 0.5 hours from the entered time
 - All times are stored in decimal format (e.g., 8.5 hours = 8 hours 30 minutes)
 - The database is created locally and persists between sessions

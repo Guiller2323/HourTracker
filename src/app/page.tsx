@@ -79,7 +79,7 @@ export default function Home() {
 
         {/* Tab Navigation */}
         <div className="flex justify-center mb-6 sm:mb-8">
-          <div className="pill-outer w-full max-w-md">
+          <div className="pill-outer" style={{ width: 'fit-content' }}>
             <button
               onClick={() => setActiveTab('punch')}
               className={`px-6 py-2 rounded-md font-medium transition-all ${

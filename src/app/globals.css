@@ -39,6 +39,7 @@ input, select, button {
   --pill-inner-radius: 6px; /* matches rounded-md */
   --pill-pad: 4px; /* matches p-1 */
   display: flex;
+  width: fit-content;
   background-color: #f3f4f6; /* tailwind gray-100 */
   border-radius: calc(var(--pill-inner-radius) + var(--pill-pad));
   padding: var(--pill-pad);

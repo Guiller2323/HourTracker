@@ -199,6 +199,30 @@ Notes:
 - ✅ Ready for desktop packaging with Tauri
 
 ### Recent Updates
+#### September 2025 — Week/Timezone standardization and Mobile readiness
+1) Week standardization
+- Unified to Sunday→Saturday weeks ending on Saturday across UI, API, DB queries, tests, and docs.
+- Date picker snaps any selected date to that week’s Saturday.
+- Timecard rendering anchored at noon to avoid timezone drift.
+
+2) Timezone consistency
+- Introduced `src/lib/timezone.ts` with `NEXT_PUBLIC_TIMEZONE` (client+server) and `TIMEZONE` (server fallback). Default: America/Chicago.
+- Applied timezone to Punch Clock display/toasts, API week defaults, timecard formatting, `recordPunch`, `getCurrentPunchStatus`, `markOffDay`, and weekly reports.
+
+3) Branding and content
+- Header brand shows “La Quinta Inn & Suites”. Removed extraneous footer copy.
+
+4) Mobile readiness
+- Added mobile viewport, Apple web app meta, theme color, safe-area support.
+- Responsive layout for headers/controls; full-width inputs/buttons on small screens. Prevent iOS zoom on inputs.
+
+5) Visual polish: corner-radius consistency
+- Introduced `card-outer` and `card-inner` utilities so outer radius equals inner radius plus padding (as per Practical UI guideline).
+- Applied to main container, Punch Clock, Employee Manager, and Timecard View for consistent curves across devices.
+
+Verification
+- Week Ending shows Saturday, table lists Sunday→Saturday, and punches appear on the correct day with correct local time.
+- Set `NEXT_PUBLIC_TIMEZONE`/`TIMEZONE` for your locale (e.g., America/Chicago for Houston).
 #### August 28, 2025 — Cloud migration (Vercel + Neon)
 1. Database migration to PostgreSQL (Neon)
    - Introduced `src/lib/db.ts` with async Postgres implementation using `pg`.

@@ -128,7 +128,8 @@ export default function PunchClock({
   const statusDisplay = getStatusDisplay();
 
   return (
-  <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-md mx-auto">
+    <div className="card-outer shadow-lg w-full max-w-md mx-auto">
+      <div className="card-inner p-4 sm:p-6">
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800 mb-2">Punch Clock</h2>
         <div className="text-3xl font-mono text-blue-600 mb-4">
@@ -185,6 +186,7 @@ export default function PunchClock({
           </button>
         )}
       </div>
-    </div>
-  );
+        </div>
+      </div>
+    );
 }

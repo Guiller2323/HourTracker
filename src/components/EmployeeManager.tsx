@@ -105,7 +105,8 @@ export default function EmployeeManager({ onEmployeeAdded }: EmployeeManagerProp
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
+    <div className="card-outer shadow-lg">
+      <div className="card-inner p-6">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-bold text-gray-800">Employee Management</h3>
         <button
@@ -166,6 +167,7 @@ export default function EmployeeManager({ onEmployeeAdded }: EmployeeManagerProp
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }

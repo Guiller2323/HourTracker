@@ -197,7 +197,8 @@ export default function TimecardView({
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
+    <div className="card-outer shadow-lg">
+      <div className="card-inner p-6">
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6 print:mb-4">
         <div className="min-w-0">
@@ -248,7 +249,7 @@ export default function TimecardView({
         </div>
       </div>
 
-      {loading ? (
+  {loading ? (
         <div className="text-center py-8">
           <div className="text-gray-500">Loading timecard...</div>
         </div>
@@ -332,6 +333,7 @@ export default function TimecardView({
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }

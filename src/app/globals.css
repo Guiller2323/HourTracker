@@ -15,11 +15,40 @@ input, select, button {
   font-size: 16px; /* Avoid iOS zoom on form fields */
 }
 
+/* Outer radius = inner radius + padding */
+.card-outer {
+  --card-radius-inner: 16px; /* inner corner radius */
+  --card-pad: 16px; /* matches p-4 */
+  border-radius: calc(var(--card-radius-inner) + var(--card-pad));
+  padding: var(--card-pad);
+}
+
+@media (min-width: 640px) { /* sm: */
+  .card-outer {
+    --card-pad: 32px; /* matches p-8 */
+  }
+}
+
+.card-inner {
+  border-radius: var(--card-radius-inner);
+  background: white;
+}
+
+/* Pill switch (tabs): outer radius = inner radius + padding */
+.pill-outer {
+  --pill-inner-radius: 6px; /* matches rounded-md */
+  --pill-pad: 4px; /* matches p-1 */
+  display: flex;
+  background-color: #f3f4f6; /* tailwind gray-100 */
+  border-radius: calc(var(--pill-inner-radius) + var(--pill-pad));
+  padding: var(--pill-pad);
+}
+
 /* Print styles for timecard */
 @media print {
   body {
     -webkit-print-color-adjust: exact !important;
-    color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   
   .print\\:hidden {

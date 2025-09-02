@@ -222,17 +222,17 @@ export default function TimecardView({
               const saturdayStr = saturday.toISOString().split('T')[0];
               onWeekChange(saturdayStr);
             }}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 w-full sm:w-auto min-w-0"
           />
           <button
             onClick={downloadCSV}
-            className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors w-full sm:w-auto"
+            className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors w-full sm:w-auto text-sm whitespace-nowrap"
           >
             Export CSV
           </button>
           <button
             onClick={printTimecard}
-            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors w-full sm:w-auto"
+            className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors w-full sm:w-auto text-sm whitespace-nowrap"
           >
             Print
           </button>

@@ -69,11 +69,11 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 p-3 sm:p-4">
+    <div className="min-h-screen p-3 sm:p-4">
       <div className="card-outer shadow-2xl w-full max-w-7xl mx-auto relative overflow-hidden">
         <div className="card-inner">
         {/* Header gradient bar */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-600"></div>
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gray-200"></div>
         
         {/* Header */}
         <div className="text-center mb-8">
@@ -81,15 +81,15 @@ export default function Home() {
           <p className="text-gray-600">Employee Time Tracker</p>
         </div>
 
-        {/* Tab Navigation */}
+  {/* Tab Navigation */}
         <div className="flex justify-center mb-6 sm:mb-8">
           <div className="pill-outer w-full max-w-md">
             <button
               onClick={() => setActiveTab('punch')}
               className={`px-6 py-2 rounded-md font-medium transition-all ${
                 activeTab === 'punch'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-800'
+      ? 'bg-white text-blue-600 shadow-sm'
+      : 'text-gray-700 hover:text-gray-900'
               }`}
             >
               Punch Clock
@@ -98,8 +98,8 @@ export default function Home() {
               onClick={() => setActiveTab('timecard')}
               className={`px-6 py-2 rounded-md font-medium transition-all ${
                 activeTab === 'timecard'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-800'
+      ? 'bg-white text-blue-600 shadow-sm'
+      : 'text-gray-700 hover:text-gray-900'
               }`}
             >
               Timecard View
